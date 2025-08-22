@@ -1,0 +1,40 @@
+name: Mirror Wix with Puppeteer
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'  # 每天 UTC 03:00（视你需求修改）
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run mirror script
+        env:
+          PROXY: ${{ secrets.PROXY_URL }}   # optional, set this secret if you need proxy
+        run: |
+          node mirror-puppeteer.js "https://cssy2672.wixsite.com/my-site-1" "./public" 2 2
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
