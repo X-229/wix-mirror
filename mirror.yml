@@ -1,0 +1,27 @@
+name: Mirror Wix Site to GitHub Pages
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # 每天凌晨 3 点运行
+  workflow_dispatch:      # 手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Mirror Wix site
+        run: |
+          rm -rf ./mirror
+          wget --mirror --convert-links --adjust-extension --page-requisites --no-parent                -P ./mirror https://cssy2672.wixsite.com/my-site-1
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./mirror/cssy2672.wixsite.com/my-site-1
