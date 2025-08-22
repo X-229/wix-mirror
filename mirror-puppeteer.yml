@@ -3,27 +3,27 @@ name: Mirror Wix Site
 on:
   workflow_dispatch:
 
+# 关键：允许 github-actions[bot] 推送代码
 permissions:
   contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
+      # 拉取仓库代码
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
+      # 这里写你的抓取/构建逻辑
+      - name: Mirror Wix site
+        run: |
+          mkdir -p public
+          # ⚠️ 这里换成你自己的镜像脚本，例如 puppeteer/httrack 抓取
+          echo "<h1>Mirrored Wix Site</h1>" > public/index.html
 
-      - name: Install deps
-        run: npm install puppeteer
-
-      - name: Mirror site
-        run: node mirror.js
-
+      # 推送到 gh-pages 分支
       - name: Deploy to gh-pages
         run: |
           cd public
@@ -33,5 +33,5 @@ jobs:
           git add .
           git commit -m "Update site"
           git branch -M gh-pages
-          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git remote add origin https://github.com/${{ github.repository }}.git
           git push -f origin gh-pages
