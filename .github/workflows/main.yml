@@ -1,34 +1,52 @@
 name: Mirror Wix Site
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # 手动运行
   schedule:
-    - cron: "0 3 * * *"
+    - cron: "0 0 * * *" # 每天更新一次（可选）
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Install httrack
-        run: sudo apt-get update && sudo apt-get install -y httrack
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Puppeteer
+        run: npm install puppeteer
 
       - name: Mirror Wix site
         run: |
-          httrack "https://cssy2672.wixsite.com/my-site-1" \
-            --path ./mirror \
-            --depth=3 \
-            --mirror \
-            --robots=0 \
-            -%v
+          node -e "
+          const fs = require('fs');
+          const puppeteer = require('puppeteer');
+          (async () => {
+            const browser = await puppeteer.launch({ headless: 'new' });
+            const page = await browser.newPage();
+            await page.goto('https://cssy2672.wixsite.com/my-site-1', { waitUntil: 'networkidle2', timeout: 60000 });
+            const content = await page.content();
+            fs.mkdirSync('public', { recursive: true });
+            fs.writeFileSync('public/index.html', content);
+            await browser.close();
+          })();
+          "
 
-      - name: Show directory tree
-        run: ls -R mirror
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./mirror/cssy2672.wixsite.com/my-site-1
+      - name: Deploy to gh-pages
+        run: |
+          cd public
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update site"
+          git branch -M gh-pages
+          git remote add origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git push -f origin gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
