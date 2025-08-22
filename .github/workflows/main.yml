@@ -1,9 +1,9 @@
 name: Mirror Wix Site
 
 on:
-  workflow_dispatch:   # 手动运行
+  workflow_dispatch:
   schedule:
-    - cron: "0 3 * * *"  # 每天凌晨 3 点自动运行
+    - cron: "0 3 * * *"
 
 jobs:
   build:
@@ -12,12 +12,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Install wget
-        run: sudo apt-get install -y wget
+      - name: Install httrack
+        run: sudo apt-get update && sudo apt-get install -y httrack
 
       - name: Mirror Wix site
         run: |
-          wget -m -p -E -k -np https://cssy2672.wixsite.com/my-site-1 -P mirror
+          httrack "https://cssy2672.wixsite.com/my-site-1" \
+            --path ./mirror \
+            --depth=3 \
+            --mirror \
+            --robots=0 \
+            -%v
+
+      - name: Show directory tree
+        run: ls -R mirror
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
