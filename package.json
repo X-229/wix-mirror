@@ -1,0 +1,13 @@
+{
+  "name": "wix-mirror",
+  "version": "1.0.0",
+  "scripts": {
+    "mirror": "node mirror-puppeteer.js"
+  },
+  "dependencies": {
+    "puppeteer": "^20.0.0",
+    "cheerio": "^1.0.0-rc.12",
+    "node-fetch": "2.6.7",
+    "sanitize-filename": "^1.6.3"
+  }
+}
